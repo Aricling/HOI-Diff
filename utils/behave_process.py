@@ -2,11 +2,14 @@ import json
 import os
 import os.path as osp
 import numpy as np
+import sys
 
 anno_path = './utils/action_label.json'
 
 with open(anno_path, 'r') as f:
     anno = json.load(f)
+
+print(anno.keys())
 
 id2label = {}
 for des in anno['label_description']:
@@ -17,8 +20,8 @@ sequence = {}
 
 action_label = anno['action_label']
 for action in action_label:
-    action_id = action['label']
-    action_label = id2label[action_id]
+    action_id = action['label'] # 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+    action_label = id2label[action_id]  # 'no_interaction', 'action_transition', 'pick', 'place', 'open', 'close', 'rotate', 'clean', 'cut', 'pour', 'stir', 'take', 'put', 'move', 'other'
     if action_label == 'no_interaction' or action_label == 'action_transition':
         if len(sequence) > 0:
             all_sequence.append(sequence)
@@ -29,8 +32,8 @@ for action in action_label:
         all_sequence.append(sequence)
         sequence = {}
 
-    seq_name = action['name']
-    frame = int(action['frame'][1:].split('.')[0])
+    seq_name = action['name']   # e.g. Date01_Sub01_backpack_back
+    frame = int(action['frame'][1:].split('.')[0])  # 0005
 
     if len(sequence) == 0:
         sequence = {'name': seq_name,
