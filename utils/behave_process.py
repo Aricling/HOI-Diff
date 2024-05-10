@@ -3,7 +3,10 @@ import os
 import os.path as osp
 import numpy as np
 import sys
+from tqdm import tqdm
 
+# print(osp.dirname(osp.dirname(__file__)))
+os.chdir(osp.dirname(osp.dirname(__file__)))
 anno_path = './utils/action_label.json'
 
 with open(anno_path, 'r') as f:
@@ -40,7 +43,13 @@ for action in action_label:
                     'action': action_label,
                     'frame' :[frame]}
     else:
-        sequence['frame'].append(frame)
+        if  sequence['name'] == action['name']:
+            sequence['frame'].append(frame)
+        else:
+            all_sequence.append(sequence)
+            sequence = {'name': seq_name,
+                    'action': action_label,
+                    'frame' :[frame]}
 
 # # generate text description
 # text_save_path = ./texts'
@@ -58,9 +67,11 @@ for action in action_label:
 
 # split behave motion annotations based on the action annotations
 save_path = './dataset/raw_behave'
-behave_path = './dataset/behave-30fps-params'
-for seq in all_sequence:
-    seq_name_fine = seq['name'] + '_{}'.format(seq['frame'][0])
+behave_path = '/data1/guoling/InterDiff/interdiff/data/behave/sequences'
+for seq in tqdm(all_sequence, total=len(all_sequence)):
+    # if seq['name']=='Date02_Sub02_monitor_move':
+    #     print('stop here!')
+    seq_name_fine = seq['name'] + '_{}'.format(seq['frame'][0]) # Date01_Sub01_backpack_back_5  这里只指定了seq开始的时间
     if not osp.exists(osp.join(save_path, seq_name_fine)):
         os.makedirs(osp.join(save_path, seq_name_fine))
     min_frame = seq['frame'][0]
@@ -104,7 +115,7 @@ for seq in all_sequence:
     if angles_o.shape[0] < pose_h.shape[0]:
         frame_times_h = frame_times_h[:angles_o.shape[0]]
         continue
-    for ind, ft in enumerate(frame_times_h):
+    for ind, ft in enumerate(frame_times_h):    # 这个frame_times_h是从数据集中直接读出来的
         ft = float(ft[1:])
         if ft > (min_frame - 0.5) and ft < (max_frame + 0.5):
             pose_h_.append(pose_h[ind])
