@@ -1,2 +1,9 @@
 dataset/raw_behave/*
 array_data.txt
+body_models/*
+kit/*
+t2m/*
+checkpoints/*
+checkpoints/humanml_trans_enc_512.zip
+glove/*
+save/*

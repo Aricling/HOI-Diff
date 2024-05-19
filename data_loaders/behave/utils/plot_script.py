@@ -2,7 +2,7 @@ import math
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-plt.rcParams['animation.ffmpeg_path'] = '/shared/centos7/ffmpeg/20190305/bin/ffmpeg'
+plt.rcParams['animation.ffmpeg_path'] = '/data1/guoling/anaconda3/envs/interdiff/bin/ffmpeg'
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation, FFMpegFileWriter
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
