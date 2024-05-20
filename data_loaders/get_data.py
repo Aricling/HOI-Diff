@@ -46,10 +46,10 @@ def get_collate_fn(name, hml_mode='train', training_stage=1):
 def get_dataset(conf: DatasetConfig):
     DATA = get_dataset_class(conf.name)
     if conf.name in ["humanml",  "behave", "omomo"]:
-        dataset = DATA(split=conf.split,
-                       mode=conf.hml_mode,
-                       num_frames=conf.num_frames,
-                       training_stage=conf.training_stage)
+        dataset = DATA(split=conf.split,    # train
+                       mode=conf.hml_mode,  # train
+                       num_frames=conf.num_frames,  # 60
+                       training_stage=conf.training_stage)  # 1
     else:
         raise NotImplementedError()
         dataset = DATA(split=split, num_frames=num_frames)

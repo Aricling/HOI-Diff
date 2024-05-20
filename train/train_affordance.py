@@ -19,9 +19,9 @@ from diffusion.gaussian_diffusion import AffordDiffusion
 def main():
     args = train_args()
     fixseed(args.seed)
-    train_platform_type = eval(args.train_platform_type)
-    train_platform = train_platform_type(args.save_dir)
-    train_platform.report_args(args, name='Args')
+    train_platform_type = eval(args.train_platform_type)    # default='NoPlatform'
+    train_platform = train_platform_type(args.save_dir) # 这个初始化函数啥也没有
+    train_platform.report_args(args, name='Args')   # 这个也是空函数
 
     if args.save_dir is None:
         raise FileNotFoundError('save_dir was not specified.')
@@ -30,16 +30,16 @@ def main():
     elif not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
     args_path = os.path.join(args.save_dir, 'args.json')
-    with open(args_path, 'w') as fw:
+    with open(args_path, 'w') as fw:    # 把所有用的参数都存下来
         json.dump(vars(args), fw, indent=4, sort_keys=True)
 
     dist_util.setup_dist(args.device)
 
     print("creating data loader...")
     data_conf = DatasetConfig(
-        name=args.dataset,
-        batch_size=args.batch_size,
-        num_frames=args.num_frames,
+        name=args.dataset,  # behave
+        batch_size=args.batch_size, # 32
+        num_frames=args.num_frames, # 60
         training_stage=1
     )
     data = get_dataset_loader(data_conf)

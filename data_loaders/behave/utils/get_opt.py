@@ -9,7 +9,7 @@ def is_float(numStr):
     flag = False
     numStr = str(numStr).strip().lstrip('-').lstrip('+')    # 去除正数(+)、负数(-)符号
     try:
-        reg = re.compile(r'^[-+]?[0-9]+\.[0-9]+$')
+        reg = re.compile(r'^[-+]?[0-9]+\.[0-9]+$')  # 正则表达式的匹配
         res = reg.match(str(numStr))
         if res:
             flag = True
@@ -49,7 +49,7 @@ def get_opt(opt_path, device, use_global=False, wo_obj_motion=False):
                     opt_dict[key] = str(value)
 
     # print(opt)
-    opt_dict['which_epoch'] = 'latest'
+    opt_dict['which_epoch'] = 'latest'  # 这个opt在这个函数中是重新被定义的
     opt.save_root = pjoin(opt.checkpoints_dir, opt.dataset_name, opt.name)
     opt.model_dir = pjoin(opt.save_root, 'model')
     opt.meta_dir = pjoin(opt.save_root, 'meta')
