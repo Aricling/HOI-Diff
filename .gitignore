@@ -1,4 +1,5 @@
-dataset/*
+dataset/behave_t2m
+dataset/behave_t2m_diy
 array_data.txt
 body_models/*
 kit/*
