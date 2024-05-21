@@ -50,7 +50,7 @@ def get_opt(opt_path, device, use_global=False, wo_obj_motion=False):
 
     # print(opt)
     opt_dict['which_epoch'] = 'latest'
-    opt.save_root = pjoin(opt.checkpoints_dir, opt.dataset_name, opt.name)
+    opt.save_root = pjoin(opt.checkpoints_dir, opt.dataset_name, opt.name)  # save_root: ./checkpoints/t2m_behave/Comp_v6_KLD01
     opt.model_dir = pjoin(opt.save_root, 'model')
     opt.meta_dir = pjoin(opt.save_root, 'meta')
     opt.use_global = use_global
