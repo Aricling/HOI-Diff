@@ -46,7 +46,7 @@ VIP_dict = {
 
 
 class WordVectorizer(object):
-    def __init__(self, meta_root, prefix):
+    def __init__(self, meta_root, prefix):  # './glove', 'our_vab'
         vectors = np.load(pjoin(meta_root, '%s_data.npy'%prefix))
         words = pickle.load(open(pjoin(meta_root, '%s_words.pkl'%prefix), 'rb'))
         word2idx = pickle.load(open(pjoin(meta_root, '%s_idx.pkl'%prefix), 'rb'))
