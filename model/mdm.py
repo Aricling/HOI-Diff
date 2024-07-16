@@ -14,12 +14,12 @@ class MDM(nn.Module):
                  arch='trans_enc', emb_trans_dec=False, clip_version=None, **kargs):
         super().__init__()
 
-        self.legacy = legacy
+        self.legacy = legacy    # False
         self.modeltype = modeltype
-        self.njoints = njoints
-        self.nfeats = nfeats
+        self.njoints = njoints  # 263
+        self.nfeats = nfeats    # 1
         self.num_actions = num_actions
-        self.data_rep = data_rep
+        self.data_rep = data_rep    # hml_vec
         self.dataset = dataset
 
         self.pose_rep = pose_rep
@@ -27,7 +27,7 @@ class MDM(nn.Module):
         self.glob_rot = glob_rot
         self.translation = translation
 
-        self.latent_dim = latent_dim
+        self.latent_dim = latent_dim    # 512
 
         self.ff_size = ff_size
         self.num_layers = num_layers
@@ -207,16 +207,16 @@ class MDM(nn.Module):
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=5000):
         super(PositionalEncoding, self).__init__()
-        self.dropout = nn.Dropout(p=dropout)
+        self.dropout = nn.Dropout(p=dropout)    # self.dropout=Dropout(p=0.1, inplace=False)
 
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, d_model)  # d_model=256, 512 in training
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1) # position.shape=[5000,1]
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))    # div_term.shape=[128,]
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
 
-        self.register_buffer('pe', pe)
+        self.register_buffer('pe', pe)  # 相当于以一个单独的键值对保存了这个变量
 
     def forward(self, x):
         # not used in the final model
@@ -227,12 +227,12 @@ class PositionalEncoding(nn.Module):
 class TimestepEmbedder(nn.Module):
     def __init__(self, latent_dim, sequence_pos_encoder):
         super().__init__()
-        self.latent_dim = latent_dim
-        self.sequence_pos_encoder = sequence_pos_encoder
+        self.latent_dim = latent_dim    # 256
+        self.sequence_pos_encoder = sequence_pos_encoder    # model.mdm.PositionalEncoding
 
         time_embed_dim = self.latent_dim
         self.time_embed = nn.Sequential(
-            nn.Linear(self.latent_dim, time_embed_dim),
+            nn.Linear(self.latent_dim, time_embed_dim), # latent_dim=256, time_embed_dim=256
             nn.SiLU(),
             nn.Linear(time_embed_dim, time_embed_dim),
         )
@@ -272,10 +272,10 @@ class InputProcess(nn.Module):
 class OutputProcess(nn.Module):
     def __init__(self, data_rep, input_feats, latent_dim, njoints, nfeats):
         super().__init__()
-        self.data_rep = data_rep
-        self.input_feats = input_feats
+        self.data_rep = data_rep    # hml_vec
+        self.input_feats = input_feats  # 263
         self.latent_dim = latent_dim
-        self.njoints = njoints
+        self.njoints = njoints  # 263
         self.nfeats = nfeats
         self.poseFinal = nn.Linear(self.latent_dim, self.input_feats)
         if self.data_rep == 'rot_vel':

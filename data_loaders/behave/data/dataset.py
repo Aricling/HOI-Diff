@@ -48,8 +48,8 @@ class Text2AffordDataset(data.Dataset):
                 mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
                 temp_simp = trimesh.load(mesh_path)
 
-                obj_points = np.array(temp_simp.vertices)
-                obj_faces = np.array(temp_simp.faces)
+                obj_points = np.array(temp_simp.vertices)   # obj_points.shape:(485,3)
+                obj_faces = np.array(temp_simp.faces)   # obj_faces.shape:(999,3)
 
                 # center the meshes
                 center = np.mean(obj_points, 0)
@@ -59,14 +59,14 @@ class Text2AffordDataset(data.Dataset):
 
                 # sample object points
                 obj_sample_path = pjoin(opt.data_root, 'object_sample/{}.npy'.format(name))
-                o_choose = np.load(obj_sample_path)
+                o_choose = np.load(obj_sample_path) # o_choose.shape:(512,)
 
 
-                obj_points = obj_points[o_choose] 
+                obj_points = obj_points[o_choose]   # obj_points;(512,3)
 
 
 
-                contact_input = np.load(pjoin(opt.data_root, 'affordance_data/contact_'+name + '.npy'), allow_pickle=True)[None][0]
+                contact_input = np.load(pjoin(opt.data_root, 'affordance_data/contact_'+name + '.npy'), allow_pickle=True)[None][0] #contact_input.shape:(8,4)
 
         
                 text_data = []
@@ -75,8 +75,8 @@ class Text2AffordDataset(data.Dataset):
                     for line in f.readlines():
                         text_dict = {}
                         line_split = line.strip().split('#')
-                        caption = line_split[0]
-                        tokens = line_split[1].split(' ')
+                        caption = line_split[0] # 'A person is donning a backpack on his back.'
+                        tokens = line_split[1].split(' ')   # ['a/DET', 'person/NOUN', 'is/AUX', 'don/VERB', 'a/DET', 'backpack/NOUN', 'on/ADP', 'his/PRON', 'back/NOUN']
                         # f_tag = float(line_split[2])
                         # to_tag = float(line_split[3])
                         # f_tag = 0.0 if np.isnan(f_tag) else f_tag
@@ -108,10 +108,10 @@ class Text2AffordDataset(data.Dataset):
                                 # break
 
                 if flag:
-                    data_dict[name] = {'contact_input': contact_input,
-                                        'text': text_data,
+                    data_dict[name] = {'contact_input': contact_input,  # (8,4)
+                                        'text': text_data,  # List[dict{'caption':...,'token':...}x3]
                                         'seq_name': name,
-                                        'obj_points': obj_points
+                                        'obj_points': obj_points    # (512,3)
                                         }
 
                     new_name_list.append(name)
@@ -124,7 +124,7 @@ class Text2AffordDataset(data.Dataset):
             except:
                 pass
 
-        name_list = sorted(new_name_list, key=lambda x: x[1])
+        name_list = sorted(new_name_list, key=lambda x: x[1])   # 这一步感觉好像没啥用
 
         self.data_dict = data_dict
         self.name_list = name_list
@@ -301,37 +301,37 @@ class Text2MotionDatasetV2(data.Dataset):
         length_list = []
         for name in tqdm(id_list):
             try:
-                motion = np.load(pjoin(opt.motion_dir, name + '.npy'))
+                motion = np.load(pjoin(opt.motion_dir, name + '.npy'))  # motion.shape=(238,269)
                 
                 # load obj points----------------
                 obj_name = name.split('_')[2]
                 obj_path = pjoin(opt.data_root, 'object_mesh')
-                mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
+                mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])   # simplified_mesh就是一个字典
                 temp_simp = trimesh.load(mesh_path)
 
-                obj_points = np.array(temp_simp.vertices)
-                obj_faces = np.array(temp_simp.faces)
+                obj_points = np.array(temp_simp.vertices)   # obj_points.shape=[485,3]
+                obj_faces = np.array(temp_simp.faces)   # obj_faces.shape=[999,3]
 
                 # center the meshes
-                center = np.mean(obj_points, 0)
+                center = np.mean(obj_points, 0) 
                 obj_points -= center
                 obj_points = obj_points.astype(np.float32)
 
 
                 # sample object points
                 obj_sample_path = pjoin(opt.data_root, 'object_sample/{}.npy'.format(name))
-                o_choose = np.load(obj_sample_path)
+                o_choose = np.load(obj_sample_path) # o_choose.shape=[512,]
                                 
                         
 
-                obj_points = obj_points[o_choose]
-                obj_normals = obj_faces[o_choose] 
+                obj_points = obj_points[o_choose]   # obj_points.sahpe=[512,3]
+                obj_normals = obj_faces[o_choose]   # ''
 
 
 
 
                 # TODO: hardcode
-                motion = motion[:199].astype(np.float32)
+                motion = motion[:199].astype(np.float32)    # motion.shape=[199,269]
 
 
                 # contact_input = np.load(pjoin(opt.data_root, 'affordance_data/contact_'+name + '.npy'), allow_pickle=True)[None][0]
@@ -396,9 +396,9 @@ class Text2MotionDatasetV2(data.Dataset):
                 # print(err) 
                 pass
 
-        name_list, length_list = zip(*sorted(zip(new_name_list, length_list), key=lambda x: x[1]))
+        name_list, length_list = zip(*sorted(zip(new_name_list, length_list), key=lambda x: x[1])) # lenght_list和name_list是从小到大的重新排布
 
-        self.mean = mean
+        self.mean = mean    # 这几个都是预设好的
         self.std = std
         self.length_arr = np.array(length_list)
         self.data_dict = data_dict
@@ -452,7 +452,7 @@ class Text2MotionDatasetV2(data.Dataset):
             if len(token.split('/'))<2:
                 print(f" {seq_name}   {tokens}")
                 break
-            word_emb, pos_oh = self.w_vectorizer[token]
+            word_emb, pos_oh = self.w_vectorizer[token] # word_emb.shape=(300,); pos_oh.shape=(15,)
             pos_one_hots.append(pos_oh[None, :])
             word_embeddings.append(word_emb[None, :])
         pos_one_hots = np.concatenate(pos_one_hots, axis=0)
@@ -530,7 +530,7 @@ class Behave(data.Dataset):
             if mode == 'text_only':
                 self.t2m_dataset = TextOnlyAffordDataset(self.opt, self.split_file)
             else:
-                self.w_vectorizer = WordVectorizer(pjoin(abs_base_path, 'glove'), 'our_vab')
+                self.w_vectorizer = WordVectorizer(pjoin(abs_base_path, 'glove'), 'our_vab')    # dict：{name:numpy}
                 self.t2m_dataset = Text2AffordDataset(self.opt,  self.split_file, self.w_vectorizer)
 
         elif  self.training_stage==2:
@@ -542,8 +542,8 @@ class Behave(data.Dataset):
 
             elif mode in ['train', 'eval', 'text_only']:
                 # used by our models
-                self.mean = np.load(pjoin(opt.data_root, 'Mean_local.npy'))
-                self.std = np.load(pjoin(opt.data_root, 'Std_local.npy'))
+                self.mean = np.load(pjoin(opt.data_root, 'Mean_local.npy'))  # 这两个到底是什么东西？ self.mean.shape=[269,]
+                self.std = np.load(pjoin(opt.data_root, 'Std_local.npy'))   # self.std.shape=[269,]
 
             if mode == 'eval':
                 # used by T2M models (including evaluators)
@@ -572,8 +572,8 @@ class Behave(data.Dataset):
 
         # Load necessay variables for converting raw motion to processed data
         data_dir = './dataset/000021.npy'
-        self.n_raw_offsets = torch.from_numpy(t2m_raw_offsets)
-        self.kinematic_chain = t2m_kinematic_chain
+        self.n_raw_offsets = torch.from_numpy(t2m_raw_offsets)  # t2m_raw_offsets.shape：（22,3）
+        self.kinematic_chain = t2m_kinematic_chain  # 这个参数不知道是做什么的。
         # # Get offsets of target skeleton
         # example_data = np.load(data_dir)
         # example_data = example_data.reshape(len(example_data), -1, 3)

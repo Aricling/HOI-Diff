@@ -33,13 +33,13 @@ class TrainLoop:
         self.train_platform = train_platform
         self.model = model
         self.diffusion = diffusion
-        self.cond_mode = model.cond_mode
+        self.cond_mode = model.cond_mode    # text
         self.data = data
-        self.batch_size = args.batch_size
+        self.batch_size = args.batch_size   # 32
         self.microbatch = args.batch_size  # deprecating this option
-        self.lr = args.lr
-        self.log_interval = args.log_interval
-        self.save_interval = args.save_interval
+        self.lr = args.lr   # 0.0001
+        self.log_interval = args.log_interval   # 1000
+        self.save_interval = args.save_interval # 1000
         self.resume_checkpoint = args.resume_checkpoint
         self.use_fp16 = False  # deprecating this option
         self.fp16_scale_growth = 1e-3  # deprecating this option
@@ -49,7 +49,7 @@ class TrainLoop:
         self.step = 0
         self.resume_step = 0
         self.global_batch = self.batch_size # * dist.get_world_size()
-        self.num_steps = args.num_steps
+        self.num_steps = args.num_steps # 20000
         self.num_epochs = self.num_steps // len(self.data) + 1
 
         self.sync_cuda = torch.cuda.is_available()
@@ -61,7 +61,7 @@ class TrainLoop:
             fp16_scale_growth=self.fp16_scale_growth,
         )
 
-        self.save_dir = args.save_dir
+        self.save_dir = args.save_dir  # './save/afford_pred'
         self.overwrite = args.overwrite
 
         self.opt = AdamW(
@@ -133,11 +133,11 @@ class TrainLoop:
                     break
 
                 motion = motion.to(self.device)
-                cond['y'] = {key: val.to(self.device) if torch.is_tensor(val) else val for key, val in cond['y'].items()}
+                cond['y'] = {key: val.to(self.device) if torch.is_tensor(val) else val for key, val in cond['y'].items()}   # 这种返回的也是一个dict类型
 
                 self.run_step(motion, cond)
                 if self.step % self.log_interval == 0:
-                    for k,v in logger.get_current().name2val.items():
+                    for k,v in logger.get_current().name2val.items():   # loss, loss_q3, loss_q1, loss_q0, loss_q2, grad_norm, param_norm, step, samples
                         if k == 'loss':
                             print('step[{}]: loss[{:0.5f}]'.format(self.step+self.resume_step, v))
 
@@ -149,7 +149,7 @@ class TrainLoop:
                 if self.step % self.save_interval == 0:
                     self.save()
                     self.model.eval()
-                    self.evaluate()
+                    self.evaluate() # 这里直接不执行eval功能了，有个参数
                     self.model.train()
 
                     # Run for a finite amount of time in integration tests.
@@ -217,7 +217,7 @@ class TrainLoop:
             x_start=micro,  # [bs, ch, image_size, image_size]
             t=t,  # [bs](int) sampled timesteps
             mask=seq_mask,
-            t_bar=self.args.t_bar,
+            t_bar=self.args.t_bar,  # 700,这个参数不知道是干什么的
             model_kwargs=micro_cond,
         )
         return output
@@ -231,16 +231,16 @@ class TrainLoop:
             micro = batch
             micro_cond = cond
             last_batch = (i + self.microbatch) >= batch.shape[0]
-            t, weights = self.schedule_sampler.sample(micro.shape[0], dist_util.dev())
+            t, weights = self.schedule_sampler.sample(micro.shape[0], dist_util.dev())  # return indices and weights
 
-            micro = batch
+            micro = batch   # 这里怎么重复写了
             micro_cond = cond
             last_batch = (i + self.microbatch) >= batch.shape[0]
             t, weights = self.schedule_sampler.sample(micro.shape[0], dist_util.dev())
 
 
             if last_batch or not self.use_ddp:
-                losses = self.compute_losses(micro,t, micro_cond)
+                losses = self.compute_losses(micro,t, micro_cond)   # 返回一个字典{'loss', tensor.shape=[32]}, ##这块代码还没有细看
             else:
                 with self.ddp_model.no_sync():
                     losses = self.compute_losses(micro,t, micro_cond)
@@ -250,10 +250,10 @@ class TrainLoop:
                     t, losses["loss"].detach()
                 )
 
-            loss = (losses["loss"] * weights).mean()
+            loss = (losses["loss"] * weights).mean()    # 把32个batch的数据取平均, 不知道这里面weights作用是什么
             log_loss_dict(
                 self.diffusion, t, {k: v * weights for k, v in losses.items()}
-            )
+            )   # 这个应该就是登记loss，但是前向的过程到底在哪里呢
             self.mp_trainer.backward(loss)
 
     def _anneal_lr(self):
@@ -325,8 +325,8 @@ def find_resume_checkpoint():
 
 def log_loss_dict(diffusion, ts, losses):
     for key, values in losses.items():
-        logger.logkv_mean(key, values.mean().item())
+        logger.logkv_mean(key, values.mean().item())    # 这个logger是一个python文件，和logging没啥关系
         # Log the quantiles (four quartiles, in particular).
         for sub_t, sub_loss in zip(ts.cpu().numpy(), values.detach().cpu().numpy()):
             quartile = int(4 * sub_t / diffusion.num_timesteps)
-            logger.logkv_mean(f"{key}_q{quartile}", sub_loss)
+            logger.logkv_mean(f"{key}_q{quartile}", sub_loss)   # 相当于把新的值加进name2val这两个字典里面去了，通过键来做区分

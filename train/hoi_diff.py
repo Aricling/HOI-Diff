@@ -19,7 +19,7 @@ from diffusion.gaussian_diffusion import LocalMotionDiffusion
 def main():
     args = train_args()
     fixseed(args.seed)
-    train_platform_type = eval(args.train_platform_type)
+    train_platform_type = eval(args.train_platform_type)    # NoPlatform
     train_platform = train_platform_type(args.save_dir)
     train_platform.report_args(args, name='Args')
 
@@ -40,9 +40,8 @@ def main():
         name=args.dataset,
         batch_size=args.batch_size,
         num_frames=args.num_frames,
-        use_global=args.global_3d,
         training_stage=2
-    )
+    )   # 其实就是一个dataclass类
     data = get_dataset_loader(data_conf)
 
     print("creating model and diffusion...")
@@ -57,7 +56,7 @@ def main():
     if args.multi_backbone_split == 0:
         load_pretrained_mdm(model, state_dict)
     else:
-        load_split_mdm(model, state_dict, args.multi_backbone_split)
+        load_split_mdm(model, state_dict, args.multi_backbone_split)    # 主要是load model state_dict
         
 
     model.to(dist_util.dev())

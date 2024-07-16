@@ -36,7 +36,7 @@ class AffordEstimation(nn.Module):
 
         self.sequence_pos_encoder = PositionalEncoding(self.latent_dim, self.dropout)
 
-        self.objEmbedding = PointNet2Encoder(c_in=0, c_out=self.latent_dim, num_keypoints=256)
+        self.objEmbedding = PointNet2Encoder(c_in=0, c_out=self.latent_dim, num_keypoints=256)  # 0,256,256
 
 
         print("TRANS_ENC init")
@@ -99,13 +99,13 @@ class AffordEstimation(nn.Module):
         if force_mask:
             return torch.zeros_like(cond)
         elif self.training and self.cond_mask_prob > 0.:
-            mask = torch.bernoulli(torch.ones(bs, device=cond.device) * self.cond_mask_prob).view(bs, 1)  # 1-> use null_cond, 0-> use real cond
-            return cond * (1. - mask)
+            mask = torch.bernoulli(torch.ones(bs, device=cond.device) * self.cond_mask_prob).view(bs, 1)  # 1-> use null_cond, 0-> use real cond, 但是这个概率很小
+            return cond * (1. - mask)   # 所以大概90per都是会使用真的text作为引导
         else:
             return cond
     
     def mask_cond_obj(self, cond, force_mask=False):
-        seq, bs, d = cond.shape
+        seq, bs, d = cond.shape # [256,32,256]
         if force_mask:
             return torch.zeros_like(cond)
         elif self.training and self.cond_mask_prob > 0.:
@@ -117,7 +117,7 @@ class AffordEstimation(nn.Module):
     def encode_text(self, raw_text):
         # raw_text - list (batch_size length) of strings with input text prompts
         device = next(self.parameters()).device
-        max_text_len = 20
+        max_text_len = 20   # 文本的长度是有限制的
         if max_text_len is not None:
             default_context_length = 77
             context_length = max_text_len + 2 # start_token + 20 + end_token
@@ -148,14 +148,14 @@ class AffordEstimation(nn.Module):
 
         emb = self.embed_timestep(timesteps)  # [1, bs, d]
 
-        force_mask = y.get('uncond', False)
+        force_mask = y.get('uncond', False) # False
         if 'text' in self.cond_mode:
-            enc_text = self.encode_text(y['text'])
+            enc_text = self.encode_text(y['text'])  # enc_text.shape=[32,512]
             emb += self.embed_text(self.mask_cond(enc_text, force_mask=force_mask))
 
         # encode object shape
         if 'obj_points' in y.keys():
-            enc_obj = self.encode_obj(y['obj_points'])
+            enc_obj = self.encode_obj(y['obj_points'])  # y['obj_points'].shape=[32,512,3], enc_obj.shape=[256,32,256]
             emb = emb + self.mask_cond_obj(enc_obj, force_mask=force_mask)
 
 
@@ -165,7 +165,7 @@ class AffordEstimation(nn.Module):
         contact_input = self.input_contact_process(x)
 
         xseq_contact = torch.cat((emb, contact_input), axis=0)  # [seqlen+256 , bs, d]
-        xseq_contact = self.sequence_pos_encoder(xseq_contact)  # [seqlen+1, bs, d]
+        xseq_contact = self.sequence_pos_encoder(xseq_contact)  # [seqlen+1, bs, d]...wrong, it's the same in fact
 
 
         output_contact = self.seqTransEncoder_contact(xseq_contact)[256:]  # [seqlen+256, bs, d]

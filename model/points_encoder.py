@@ -57,7 +57,7 @@ class PointNet2Encoder(nn.Module):
         """
         # B, P, C = pointcloud.shape
         # pointcloud = pointcloud.reshape(B*I, P, C)
-        xyz, features = self._break_up_pc(pointcloud)
+        xyz, features = self._break_up_pc(pointcloud)   # xyz和pointcloud是相同的，features是None,直接就是obj_points这样
 
         l_xyz, l_features = [xyz], [features]
         for i in range(len(self.SA_modules)):

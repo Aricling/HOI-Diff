@@ -16,7 +16,7 @@ def collate_tensors(batch):
         for d in range(dims):
             sub_tensor = sub_tensor.narrow(d, 0, b.size(d))
         sub_tensor.add_(b)
-    return canvas
+    return canvas   # 其实torch.stack就可以解决，为什么一定要通过加法加进去？
 
 
 def collate(batch):
@@ -27,7 +27,7 @@ def collate(batch):
     else:
         lenbatch = [len(b['inp'][0][0]) for b in notnone_batches]
         
-    databatchTensor = collate_tensors(databatch)
+    databatchTensor = collate_tensors(databatch)    # inp对应的就是motion
     lenbatchTensor = torch.as_tensor(lenbatch)
     maskbatchTensor = lengths_to_mask(lenbatchTensor, databatchTensor.shape[-1]).unsqueeze(1).unsqueeze(1) # unqueeze for broadcasting
 
@@ -119,10 +119,10 @@ def t2m_omomo_collate(batch):
 
 
 def afford_collate(batch):
-    notnone_batches = [b for b in batch if b is not None]
+    notnone_batches = [b for b in batch if b is not None]   # 这几步验证感觉纯多余啊
     databatch = [b['inp'] for b in notnone_batches]
 
-    databatchTensor = collate_tensors(databatch)
+    databatchTensor = collate_tensors(databatch)    # databatchTensor.shape=[32,4,1,8]
 
     motion = databatchTensor
     cond = {'y': {'mask': None}}
@@ -142,7 +142,7 @@ def afford_collate(batch):
     
     if 'obj_points' in notnone_batches[0]:
         obj_points = [b['obj_points']for b in notnone_batches]
-        obj_points = torch.as_tensor(obj_points)
+        obj_points = torch.as_tensor(obj_points)    # obj_points.shape=(b,512,3)
         if len(obj_points.shape) < 3:
             obj_points = obj_points.unsqueeze(0)
         cond['y'].update({'obj_points': obj_points})  #  this part is changed for prompt-based generation

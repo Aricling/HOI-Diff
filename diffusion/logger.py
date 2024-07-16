@@ -190,13 +190,13 @@ class TensorBoardOutputFormat(KVWriter):
 
 def make_output_format(format, ev_dir, log_suffix=""):
     os.makedirs(ev_dir, exist_ok=True)
-    if format == "stdout":
+    if format == "stdout":  # this one
         return HumanOutputFormat(sys.stdout)
-    elif format == "log":
+    elif format == "log":   # this one
         return HumanOutputFormat(osp.join(ev_dir, "log%s.txt" % log_suffix))
     elif format == "json":
         return JSONOutputFormat(osp.join(ev_dir, "progress%s.json" % log_suffix))
-    elif format == "csv":
+    elif format == "csv":   # this one
         return CSVOutputFormat(osp.join(ev_dir, "progress%s.csv" % log_suffix))
     elif format == "tensorboard":
         return TensorBoardOutputFormat(osp.join(ev_dir, "tb%s" % log_suffix))
@@ -350,7 +350,7 @@ class Logger(object):
     def logkv_mean(self, key, val):
         oldval, cnt = self.name2val[key], self.name2cnt[key]
         self.name2val[key] = oldval * cnt / (cnt + 1) + val / (cnt + 1)
-        self.name2cnt[key] = cnt + 1
+        self.name2cnt[key] = cnt + 1    # 这边倒是看bu出来在计算什么
 
     def dumpkvs(self):
         if self.comm is None:
@@ -444,7 +444,7 @@ def configure(dir=None, format_strs=None, comm=None, log_suffix=""):
     If comm is provided, average all numerical stats across that comm
     """
     if dir is None:
-        dir = os.getenv("OPENAI_LOGDIR")
+        dir = os.getenv("OPENAI_LOGDIR")    # 不知道这个dir是做什么的
     if dir is None:
         dir = osp.join(
             tempfile.gettempdir(),
@@ -460,13 +460,13 @@ def configure(dir=None, format_strs=None, comm=None, log_suffix=""):
 
     if format_strs is None:
         if rank == 0:
-            format_strs = os.getenv("OPENAI_LOG_FORMAT", "stdout,log,csv").split(",")
+            format_strs = os.getenv("OPENAI_LOG_FORMAT", "stdout,log,csv").split(",")   # use default value
         else:
             format_strs = os.getenv("OPENAI_LOG_FORMAT_MPI", "log").split(",")
     format_strs = filter(None, format_strs)
-    output_formats = [make_output_format(f, dir, log_suffix) for f in format_strs]
+    output_formats = [make_output_format(f, dir, log_suffix) for f in format_strs]  # 这行代码怎么每次运行的结果都不一样
 
-    Logger.CURRENT = Logger(dir=dir, output_formats=output_formats, comm=comm)
+    Logger.CURRENT = Logger(dir=dir, output_formats=output_formats, comm=comm)  # 在这边改变了Logger.CURRENT的值
     if output_formats:
         log("Logging to %s" % dir)
 

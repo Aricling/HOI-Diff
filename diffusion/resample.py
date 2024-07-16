@@ -50,12 +50,12 @@ class ScheduleSampler(ABC):
                  - weights: a tensor of weights to scale the resulting losses.
         """
         w = self.weights()
-        p = w / np.sum(w)
-        indices_np = np.random.choice(len(p), size=(batch_size,), p=p)
+        p = w / np.sum(w)   # 因为diffusion.num_timesteps为1000
+        indices_np = np.random.choice(len(p), size=(batch_size,), p=p)  # 随机抽取了32个元素
         indices = th.from_numpy(indices_np).long().to(device)
-        weights_np = 1 / (len(p) * p[indices_np])
+        weights_np = 1 / (len(p) * p[indices_np])   # 这个必然算出来全是1
         weights = th.from_numpy(weights_np).float().to(device)
-        return indices, weights
+        return indices, weights # len(weights)=32
 
 
 class UniformSampler(ScheduleSampler):

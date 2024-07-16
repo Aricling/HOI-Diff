@@ -61,9 +61,9 @@ def get_model_args(args, data):
     # default args
     clip_version = 'ViT-B/32'
     action_emb = 'tensor'
-    cond_mode = get_cond_mode(args)
+    cond_mode = get_cond_mode(args) # text
     if hasattr(data.dataset, 'num_actions'):
-        num_actions = data.dataset.num_actions
+        num_actions = data.dataset.num_actions  # 1
     else:
         num_actions = 1
 

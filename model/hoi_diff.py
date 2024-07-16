@@ -53,8 +53,8 @@ class HOIDiff(MDM):
 
 
         self.mutual_attn = MutualAttention(num_layers=2,
-                                    latent_dim=self.latent_dim,
-                                    input_feats=self.input_feats
+                                    latent_dim=self.latent_dim, # 512
+                                    input_feats=self.input_feats    # 263
                                     )
 
 
