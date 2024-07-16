@@ -511,22 +511,22 @@ class Behave(data.Dataset):
         dataset_opt_path = pjoin(abs_base_path, datapath)
         device = None  # torch.device('cuda:4') # This param is not in use in this context
         opt = get_opt(dataset_opt_path, device, use_global, wo_obj_motion)
-        opt.meta_dir = pjoin(abs_base_path, opt.meta_dir)
-        opt.motion_dir = pjoin(abs_base_path, opt.motion_dir)
-        opt.afford_dir = pjoin(abs_base_path, opt.afford_dir)
-        opt.text_dir = pjoin(abs_base_path, opt.text_dir)
-        opt.model_dir = pjoin(abs_base_path, opt.model_dir)
-        opt.checkpoints_dir = pjoin(abs_base_path, opt.checkpoints_dir)
-        opt.data_root = pjoin(abs_base_path, opt.data_root)
-        opt.save_root = pjoin(abs_base_path, opt.save_root)
+        opt.meta_dir = pjoin(abs_base_path, opt.meta_dir)   # '././checkpoints/t2m_behave/Comp_v6_KLD01/meta'
+        opt.motion_dir = pjoin(abs_base_path, opt.motion_dir)   # '././dataset/behave_t2m/new_joint_vecs_local'
+        opt.afford_dir = pjoin(abs_base_path, opt.afford_dir)   # '././dataset/behave_t2m/new_joint_vecs_local'
+        opt.text_dir = pjoin(abs_base_path, opt.text_dir)   # '././dataset/behave_t2m/texts'
+        opt.model_dir = pjoin(abs_base_path, opt.model_dir) # '././dataset/behave_t2m/new_joint_vecs_local'
+        opt.checkpoints_dir = pjoin(abs_base_path, opt.checkpoints_dir) # '././checkpoints'
+        opt.data_root = pjoin(abs_base_path, opt.data_root) # '././dataset/behave_t2m/'
+        opt.save_root = pjoin(abs_base_path, opt.save_root) # '././checkpoints/t2m_behave/Comp_v6_KLD01'
         opt.meta_dir = './dataset'
         self.opt = opt
-        self.use_global = use_global
-        self.training_stage = training_stage
-        print('Loading dataset %s ...' % opt.dataset_name)
+        self.use_global = use_global    # false
+        self.training_stage = training_stage    # 1
+        print('Loading dataset %s ...' % opt.dataset_name)  # 't2m_behave'
 
         if  self.training_stage==1:
-            self.split_file = pjoin(opt.data_root, f'{split}.txt')     #   adopt augmented data for affordance training
+            self.split_file = pjoin(opt.data_root, f'{split}.txt')     #   adopt augmented data for affordance training, split: train
             if mode == 'text_only':
                 self.t2m_dataset = TextOnlyAffordDataset(self.opt, self.split_file)
             else:

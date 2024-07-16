@@ -8,4 +8,8 @@ checkpoints/*
 checkpoints/humanml_trans_enc_512.zip
 glove/*
 save/*
+<<<<<<< HEAD
 dataset/test.py
+=======
+dataset/test.py
+>>>>>>> 18095d2fe656f5b93bb9414a65e1b027b51e3c82
