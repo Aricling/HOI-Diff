@@ -131,7 +131,6 @@ class TrainLoop:
             for motion, cond in tqdm(self.data):
                 if not (not self.lr_anneal_steps or self.step + self.resume_step < self.lr_anneal_steps):
                     break
-
                 motion = motion.to(self.device)
                 cond['y'] = {key: val.to(self.device) if torch.is_tensor(val) else val for key, val in cond['y'].items()}   # 这种返回的也是一个dict类型
 

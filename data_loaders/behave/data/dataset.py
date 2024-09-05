@@ -18,6 +18,7 @@ import scipy.sparse
 from data_loaders.behave.utils.paramUtil import *
 from utils.utils import recover_obj_points
 from data_loaders.behave.utils.plot_script import plot_3d_motion
+from typing import List
 
 
 def collate_fn(batch):
@@ -288,11 +289,11 @@ class Text2MotionDatasetV2(data.Dataset):
         self.pointer = 0
         self.max_motion_length = opt.max_motion_length
         min_motion_len = 40
-        self.normal_dim = opt.dim_pose
+        self.normal_dim = opt.dim_pose  # 216
 
         data_dict = {}
         id_list = []
-        with cs.open(split_file, 'r') as f:
+        with cs.open(split_file, 'r') as f: # train_file
             for line in f.readlines():
                 id_list.append(line.strip())
 
@@ -301,7 +302,14 @@ class Text2MotionDatasetV2(data.Dataset):
         length_list = []
         for name in tqdm(id_list):
             try:
-                motion = np.load(pjoin(opt.motion_dir, name + '.npy'))  # motion.shape=(238,269)
+                motion_path=pjoin(opt.motion_dir, name, "clips_preprocessed")
+
+                f_name_list=os.listdir(motion_path)
+                motion_dict_list=[]
+                for _, f_name in enumerate(f_name_list):
+                    motion_npz=np.load(os.path.join(motion_path, f_name))
+                    motion_dict_list.append({key:motion_npz[key] for key in motion_npz.files})
+                    # motion_dict_list[i].update({"motion_name": name})
                 
                 # load obj points----------------
                 obj_name = name.split('_')[2]
@@ -331,14 +339,18 @@ class Text2MotionDatasetV2(data.Dataset):
 
 
                 # TODO: hardcode
-                motion = motion[:199].astype(np.float32)    # motion.shape=[199,269]
+                for motion_dict in motion_dict_list:
+                    key_list=['poses', 'betas', 'trans', 'jtrs', 'obj_trans', 'obj_angles']
+                    for key in key_list:
+                        motion_dict.update({key: motion_dict[key][:300]})
+                # motion = motion[:199].astype(np.float32)    # motion.shape=[199,269]
 
 
                 # contact_input = np.load(pjoin(opt.data_root, 'affordance_data/contact_'+name + '.npy'), allow_pickle=True)[None][0]
 
-                
-                if (len(motion)) < min_motion_len or (len(motion) >= 200):
-                    continue
+
+                # if (len(motion)) < min_motion_len or (len(motion) >= 200):
+                #     continue
                 text_data = []
                 flag = False
                 with cs.open(pjoin(opt.text_dir, name + '.txt')) as f:
@@ -380,8 +392,8 @@ class Text2MotionDatasetV2(data.Dataset):
                                 # break
 
                 if flag:
-                    data_dict[name] = {'motion': motion,
-                                        'length': len(motion),
+                    data_dict[name] = {'motion': motion_dict_list,
+                                        'length': [len(motion_dict['poses']) for motion_dict in motion_dict_list],
                                         'text': text_data,
                                         'seq_name': name,
                                         'obj_points': obj_points,
@@ -390,11 +402,11 @@ class Text2MotionDatasetV2(data.Dataset):
                                     }
 
                     new_name_list.append(name)
-                    length_list.append(len(motion))
+                    length_list.append([len(motion_dict['poses']) for motion_dict in motion_dict_list])
             except Exception as err:
                 # print(err.__class__.__name__) 
                 # print(err) 
-                pass
+                raise
 
         name_list, length_list = zip(*sorted(zip(new_name_list, length_list), key=lambda x: x[1])) # lenght_list和name_list是从小到大的重新排布
 
@@ -471,7 +483,7 @@ class Text2MotionDatasetV2(data.Dataset):
         motion = motion[idx:idx+m_length]
 
         
-        if not self.opt.use_global:
+        if not self.opt.use_global: # False
             "Z Normalization"
             motion = np.copy(motion)
             if len(self.mean) == 269:
@@ -513,7 +525,7 @@ class Behave(data.Dataset):
         opt = get_opt(dataset_opt_path, device, use_global, wo_obj_motion)
         opt.meta_dir = pjoin(abs_base_path, opt.meta_dir)   # '././checkpoints/t2m_behave/Comp_v6_KLD01/meta'
         opt.motion_dir = pjoin(abs_base_path, opt.motion_dir)   # '././dataset/behave_t2m/new_joint_vecs_local'
-        opt.afford_dir = pjoin(abs_base_path, opt.afford_dir)   # '././dataset/behave_t2m/new_joint_vecs_local'
+        # opt.afford_dir = pjoin(abs_base_path, opt.afford_dir)   # '././dataset/behave_t2m/new_joint_vecs_local'
         opt.text_dir = pjoin(abs_base_path, opt.text_dir)   # '././dataset/behave_t2m/texts'
         opt.model_dir = pjoin(abs_base_path, opt.model_dir) # '././dataset/behave_t2m/new_joint_vecs_local'
         opt.checkpoints_dir = pjoin(abs_base_path, opt.checkpoints_dir) # '././checkpoints'
@@ -522,7 +534,7 @@ class Behave(data.Dataset):
         opt.meta_dir = './dataset'
         self.opt = opt
         self.use_global = use_global    # false
-        self.training_stage = training_stage    # 1
+        self.training_stage = training_stage
         print('Loading dataset %s ...' % opt.dataset_name)  # 't2m_behave'
 
         if  self.training_stage==1:
@@ -542,7 +554,7 @@ class Behave(data.Dataset):
 
             elif mode in ['train', 'eval', 'text_only']:
                 # used by our models
-                self.mean = np.load(pjoin(opt.data_root, 'Mean_local.npy'))  # 这两个到底是什么东西？ self.mean.shape=[269,]
+                self.mean = np.load(pjoin(opt.data_root, 'Mean_local.npy'))  # self.mean.shape=[269,]
                 self.std = np.load(pjoin(opt.data_root, 'Std_local.npy'))   # self.std.shape=[269,]
 
             if mode == 'eval':

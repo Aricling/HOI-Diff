@@ -45,7 +45,7 @@ def mean_variance(data_dir, save_dir, joints_num):
 
 
 if __name__ == '__main__':
-    data_dir = './dataset/behave_t2m/new_joint_vecs_local/'
+    data_dir = './dataset/behave_t2m/new_joint_vecs_local/' # 都是npy文件
     save_dir = './dataset/behave_t2m/'
     mean, std = mean_variance(data_dir, save_dir, 22)
 #     print(mean)
